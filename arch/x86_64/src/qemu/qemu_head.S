@@ -208,19 +208,11 @@ __start:
 	/* Initialize and start NuttX */
 	call	up_lowsetup					/* Low-level, pre-OS initialization */
 
-    push %rax
-    xor %rax, %rax
-    movq $500, %rax
-    vmcall
-    pop %rax
-
-    mov $0xfa, %dx
-    mov $0, %ax
-    out %al, (%dx)
-
 	call	os_start					/* Start NuttX */
 
 	/* NuttX will not return */
+    /* We should never end up here */
+    /* If we really do, then we are doomed, halting the processor for ever */
 
 	cli
 hang:
