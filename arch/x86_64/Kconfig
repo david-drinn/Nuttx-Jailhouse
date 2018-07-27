@@ -1,0 +1,42 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+if ARCH_X86_64
+comment "x86_64 Configuration Options"
+
+choice
+	prompt "x86_64 chip selection"
+	default ARCH_INTEL64
+
+config ARCH_INTEL64
+	bool "intel64"
+	select ARCH_X86_HAVE_64BIT
+	---help---
+		Intel x86_64 architecture
+
+endchoice
+
+config ARCH_CHIP_QEMU
+	bool "Qemu x86_64 emulation"
+	default n
+	---help---
+		Intel intel64 architecture
+
+config ARCH_CHIP
+	string
+	default "qemu" if ARCH_CHIP_QEMU
+
+config ARCH_X86_HAVE_64BIT
+	bool
+	default n
+
+source arch/x86_64/src/common/Kconfig
+if ARCH_INTEL64
+source arch/x86_64/src/intel64/Kconfig
+endif # ARCH_INTEL64
+if ARCH_CHIP_QEMU
+source arch/x86/src/qemu/Kconfig
+endif # ARCH_CHIP_QEMU
+endif # ARCH_X86_64
