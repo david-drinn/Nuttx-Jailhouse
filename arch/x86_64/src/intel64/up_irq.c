@@ -59,8 +59,8 @@
  ****************************************************************************/
 
 static void idt_outb(uint8_t val, uint16_t addr) noinline_function;
-static void up_remappic(void);
-static void up_idtentry(unsigned int index, uint32_t base, uint16_t sel,
+static void up_apic_init(void);
+static void up_idtentry(unsigned int index, uint64_t base, uint16_t sel,
                         uint8_t flags);
 static inline void up_idtinit(void);
 
@@ -94,14 +94,10 @@ static void idt_outb(uint8_t val, uint16_t addr)
 }
 
 /****************************************************************************
- * Name: up_remappic
+ * Name: up_init_apic
  *
  * Description:
- *   Remap the PIC.  The Programmable Interrupt Controller (PIC) is used to
- *   combine several sources of interrupt onto one or more CPU lines, while
- *   allowing priority levels to be assigned to its interrupt outputs. When
- *   the device has multiple interrupt outputs to assert, it will assert them
- *   in the order of their relative priority.
+ *  Initialize the APIC
  *
  ****************************************************************************/
 
@@ -257,10 +253,6 @@ void up_irqinitialize(void)
 
 void up_disable_irq(int irq)
 {
-  unsigned int regaddr;
-  uint8_t      regbit;
-
-
 }
 
 /****************************************************************************
@@ -273,9 +265,6 @@ void up_disable_irq(int irq)
 
 void up_enable_irq(int irq)
 {
-  unsigned int regaddr;
-  uint8_t      regbit;
-
 }
 
 /****************************************************************************

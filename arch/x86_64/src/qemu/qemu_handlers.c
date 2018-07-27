@@ -49,6 +49,9 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+#define X2APIC_EOI		0x80b
+
+#define APIC_EOI_ACK		0
 
 /****************************************************************************
  * Private Function Prototypes
@@ -168,6 +171,10 @@ uint64_t *isr_handler(uint64_t *regs, uint64_t irq)
   return regs;               /* To keep the compiler happy */
 #else
   uint64_t *ret;
+  /*if(irq == 0xd){*/
+      /*asm("mov %0, %%rcx; mov $500, %%eax;vmcall;"::"g" (regs[REG_ERRCODE]):"eax", "rcx");*/
+      /*asm("mov $1300, %%eax;vmcall;":::"eax");*/
+  /*}*/
 
   /* Dispatch the interrupt */
 
@@ -199,17 +206,13 @@ uint64_t *irq_handler(uint64_t *regs, uint64_t irq_no)
   board_autoled_on(LED_INIRQ);
 
   /* Get the IRQ number */
-
   irq = (int)irq_no;
 
-  /* Send an EOI (end of interrupt) signal to the PICs if this interrupt
-   * involved the slave.
-   */
-  //XXX: Adapt APIC
-
   /* Dispatch the interrupt */
-
   ret = common_handler(irq, regs);
+
+  /* Send an EOI (end of interrupt) signal to the APIC */
+  write_msr(X2APIC_EOI, APIC_EOI_ACK);
   board_autoled_off(LED_INIRQ);
   return ret;
 #endif

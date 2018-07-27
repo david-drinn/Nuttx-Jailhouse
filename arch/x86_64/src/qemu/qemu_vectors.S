@@ -85,8 +85,7 @@
 	.globl	vector_isr\intno
 vector_isr\intno:
 	cli							/* Disable interrupts firstly. */
-    sub     $4, %rsp
-	movl    $0, (%rsp)				/* Push a dummy error code. */
+	pushq  $0				/* Push a dummy error code. */
     push   %rdi
     push   %rsi
 	movq   $\intno,   %rsi     /* INT Number is saved to 2nd parameter of function call */
@@ -115,8 +114,7 @@ vector_isr\intno:
 	.globl	vector_irq\irqno
 vector_irq\irqno:
 	cli							/* Disable interrupts firstly. */
-    sub     $4, %rsp
-	movl    $0, (%rsp)				/* Push a dummy error code. */
+	pushq  $0				/* Push a dummy error code. */
     push   %rdi
     push   %rsi
 	movq   $\intno,   %rsi     /* INT Number is saved to 2nd parameter of function call */
@@ -364,7 +362,11 @@ irq_common:
     popq   %rcx
     popq   %rdx
 
-	add		$4, %rsp			/* Cleans up the pushed error code and pushed ISR number */
+    popq   %rsi
+    popq   %rdi
+
+	add		$8, %rsp			/* Cleans up the pushed error code */
+
 	iretq						/* Pops 5 things at once: CS, RIP, RFLAGS and SS and RSP */
 	.size	irq_common, . - irq_common
 	.end

@@ -176,7 +176,8 @@ start32:
 	.global gdt64
 gdt64:
 	.quad	0
-    .quad   0x0020980000000000
+    .quad   0x002f98000000ffff
+    .quad   0x000f92000000ffff
 
 gdt64_ptr:
 	.short	gdt64_ptr - gdt64 - 1
@@ -186,8 +187,8 @@ gdt64_ptr:
     .code64
 start64:
 
-    // Clear Segement Registers, not used in Paging
-    mov $0, %ax
+    // Set Segement Registers for proper iret, etc. operation
+    mov $0x10, %ax
     mov %ax, %ss
     mov %ax, %ds
     mov %ax, %es
