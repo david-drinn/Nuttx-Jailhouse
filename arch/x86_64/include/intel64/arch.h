@@ -121,7 +121,7 @@ begin_packed_struct struct idt_ptr_s
 
 static inline unsigned long read_msr(unsigned int msr)
 {
-	u32 low, high;
+	uint32_t low, high;
 
 	asm volatile("rdmsr" : "=a" (low), "=d" (high) : "c" (msr));
 	return low | ((unsigned long)high << 32);
@@ -133,18 +133,6 @@ static inline void write_msr(unsigned int msr, unsigned long val)
 		: /* no output */
 		: "c" (msr), "a" (val), "d" (val >> 32)
 		: "memory");
-}
-
-static inline uint64_t up_getrsp()
-{
-  uint64_t regval;
-
-  asm volatile(
-    "\tmovq %%rsp, %0\n"
-    : "=rm" (regval)
-    :
-    : "memory");
-  return regval;
 }
 
 /* Return stack pointer */
