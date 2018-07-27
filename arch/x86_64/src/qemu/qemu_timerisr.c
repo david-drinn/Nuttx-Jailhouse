@@ -156,7 +156,7 @@ static int qemu_timerisr(int irq, uint32_t *regs, void *arg)
 
   asm("mov $10000, %%eax;vmcall;":::"%eax");
   sched_process_timer();
-  apic_timer_set(NS_PER_MSEC);
+  apic_timer_set(100 * NS_PER_MSEC);
   return 0;
 }
 
