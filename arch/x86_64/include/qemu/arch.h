@@ -51,13 +51,39 @@
  ****************************************************************************/
 #define COMM_REGION_BASE 0x100000
 
+#define JAILHOUSE_MSG_NONE			0
+
+/* messages to cell */
+#define JAILHOUSE_MSG_SHUTDOWN_REQUEST		1
+#define JAILHOUSE_MSG_RECONFIG_COMPLETED	2
+
+/* replies from cell */
+#define JAILHOUSE_MSG_UNKNOWN			1
+#define JAILHOUSE_MSG_REQUEST_DENIED		2
+#define JAILHOUSE_MSG_REQUEST_APPROVED		3
+#define JAILHOUSE_MSG_RECEIVED			4
+
+/* cell state, initialized by hypervisor, updated by cell */
+#define JAILHOUSE_CELL_RUNNING			0
+#define JAILHOUSE_CELL_RUNNING_LOCKED		1
+#define JAILHOUSE_CELL_SHUT_DOWN		2 /* terminal state */
+#define JAILHOUSE_CELL_FAILED			3 /* terminal state */
+#define JAILHOUSE_CELL_FAILED_COMM_REV		4 /* terminal state */
+
+#define COMM_REGION_ABI_REVISION		0
+#define COMM_REGION_MAGIC			"JHCOMM"
+
 #define COMM_REGION_GENERIC_HEADER					\
+	/** Communication region magic JHCOMM */			\
+	char signature[6];						\
+	/** Communication region ABI revision */			\
+	uint16_t revision;							\
+	/** Cell state, initialized by hypervisor, updated by cell. */	\
+	volatile uint32_t cell_state;					\
 	/** Message code sent from hypervisor to cell. */		\
 	volatile uint32_t msg_to_cell;					\
 	/** Reply code sent from cell to hypervisor. */			\
 	volatile uint32_t reply_from_cell;					\
-	/** Cell state, initialized by hypervisor, updated by cell. */	\
-	volatile uint32_t cell_state;					\
 	/** \privatesection */						\
 	volatile uint32_t padding;						\
 	/** \publicsection */
