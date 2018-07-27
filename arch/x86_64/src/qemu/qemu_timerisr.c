@@ -58,31 +58,88 @@
 #include "chip.h"
 #include "qemu.h"
 
-//XXX: Use TSC DEADLINE
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-/* Programmable interval timer (PIT)
- *
- *   Fpit = Fin / divisor
- *   divisor = Fin / divisor
- *
- * Where:
- *
- *   Fpit = The desired interrupt frequency.
- *   Fin  = PIT input frequency (PIT_CLOCK provided in board.h)
- *
- * The desired timer interrupt frequency is provided by the definition CLK_TCK
- * (see include/time.h).  CLK_TCK defines the desired number of system clock
- * ticks per second.  That value is a user configurable setting that defaults
- * to 100 (100 ticks per second = 10 MS interval).
- */
+#define NS_PER_USEC		1000UL
+#define NS_PER_MSEC		1000000UL
+#define NS_PER_SEC		1000000000UL
 
-//#define PIT_DIVISOR  ((uint32_t)PIT_CLOCK/(uint32_t)CLK_TCK)
+#define IA32_TSC_DEADLINE	0x6e0
+
+#define X2APIC_LVTT		0x832
+#define LVTT_TSC_DEADLINE	(1 << 18)
+#define X2APIC_TMICT		0x838
+#define X2APIC_TMCCT		0x839
+#define X2APIC_TDCR		0x83e
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static unsigned long apic_tick_freq;
+static unsigned long tsc_freq, tsc_overflow;
+static unsigned long tsc_last;
+static unsigned long tsc_overflows;
+static bool tsc_deadline;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+static uint64_t rdtsc(void)
+{
+	uint32_t lo, hi;
+
+	asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
+	return (uint64_t)lo | (((uint64_t)hi) << 32);
+}
+
+/****************************************************************************
+ * Function:  tsc_init
+ *
+ * Description:
+ *   calculate the TSC frequency from comm region
+ *
+ ****************************************************************************/
+
+unsigned long tsc_init(void)
+{
+	tsc_freq = comm_region->tsc_khz * 1000L;
+	tsc_overflow = (0x100000000L * NS_PER_SEC) / tsc_freq;
+
+	return tsc_freq;
+}
+
+
+unsigned long tsc_read(void)
+{
+	unsigned long tmr;
+
+	tmr = ((rdtsc() & 0xffffffffLL) * NS_PER_SEC) / tsc_freq;
+	if (tmr < tsc_last)
+		tsc_overflows += tsc_overflow;
+	tsc_last = tmr;
+	return tmr + tsc_overflows;
+}
+
+/****************************************************************************
+ * Function:  apic_timer_set
+ *
+ * Description:
+ *   Set a time for APIC timer to fire
+ *
+ ****************************************************************************/
+
+void apic_timer_set(unsigned long timeout_ns)
+{
+	unsigned long long ticks =
+		(unsigned long long)timeout_ns * apic_tick_freq / NS_PER_SEC;
+	if (tsc_deadline)
+		write_msr(IA32_TSC_DEADLINE, rdtsc() + ticks);
+	else
+		write_msr(X2APIC_TMICT, ticks);
+}
 
 /****************************************************************************
  * Function: qemu_timerisr
@@ -97,7 +154,9 @@ static int qemu_timerisr(int irq, uint32_t *regs, void *arg)
 {
   /* Process timer interrupt */
 
+  asm("mov $10000, %%eax;vmcall;":::"%eax");
   sched_process_timer();
+  apic_timer_set(NS_PER_MSEC);
   return 0;
 }
 
@@ -106,7 +165,7 @@ static int qemu_timerisr(int irq, uint32_t *regs, void *arg)
  ****************************************************************************/
 
 /****************************************************************************
- * Function:  x86_timer_initialize
+ * Function:  x86_64_timer_initialize
  *
  * Description:
  *   This function is called during start-up to initialize
@@ -116,23 +175,30 @@ static int qemu_timerisr(int irq, uint32_t *regs, void *arg)
 
 void x86_64_timer_initialize(void)
 {
-  /* uint32_t to avoid compile time overflow errors */
+    unsigned long ecx;
+    uint32_t vector = IRQ0;
 
-  /*uint32_t divisor = PIT_DIVISOR;*/
-  /*DEBUGASSERT(divisor <= 0xffff);*/
+    (void)irq_attach(IRQ0, (xcpt_t)qemu_timerisr, NULL);
 
-  /*[> Attach to the timer interrupt handler <]*/
+    asm volatile("cpuid" : "=c" (ecx) : "a" (1)
+        : "rbx", "rdx", "memory");
+    tsc_deadline = !!(ecx & (1 << 24));
 
-  /*(void)irq_attach(IRQ0, (xcpt_t)qemu_timerisr, NULL);*/
+    if (tsc_deadline) {
+        vector |= LVTT_TSC_DEADLINE;
+        apic_tick_freq = tsc_init();
+    } else {
+        apic_tick_freq = comm_region->apic_khz * 1000 / 16;
+    }
 
-  /*[> Send the command byte to configure counter 0 <]*/
+    write_msr(X2APIC_LVTT, vector);
 
-  /*outb(PIT_OCW_MODE_SQUARE|PIT_OCW_RL_DATA|PIT_OCW_COUNTER_0, PIT_REG_COMMAND);*/
+    /* Required when using TSC deadline mode. */
+    asm volatile("mfence" : : : "memory");
 
-  /*[> Set the PIT input frequency divisor <]*/
+    apic_timer_set(NS_PER_MSEC);
 
-  /*outb((uint8_t)(divisor & 0xff),  PIT_REG_COUNTER0);*/
-  /*outb((uint8_t)((divisor >> 8) & 0xff), PIT_REG_COUNTER0);*/
+    return;
 
   /*[> And enable IRQ0 <]*/
 
