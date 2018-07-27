@@ -40,6 +40,8 @@
 #ifndef __ARCH_X86_64_INCLUDE_QEMU_ARCH_H
 #define __ARCH_X86_64_INCLUDE_QEMU_ARCH_H
 
+#include <stdint.h>
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
@@ -47,6 +49,18 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+#define COMM_REGION_BASE 0x100000
+
+#define COMM_REGION_GENERIC_HEADER					\
+	/** Message code sent from hypervisor to cell. */		\
+	volatile uint32_t msg_to_cell;					\
+	/** Reply code sent from cell to hypervisor. */			\
+	volatile uint32_t reply_from_cell;					\
+	/** Cell state, initialized by hypervisor, updated by cell. */	\
+	volatile uint32_t cell_state;					\
+	/** \privatesection */						\
+	volatile uint32_t padding;						\
+	/** \publicsection */
 
 /****************************************************************************
  * Inline functions
@@ -55,10 +69,27 @@
 /****************************************************************************
  * Public Types
  ****************************************************************************/
+struct jailhouse_comm_region {
+	COMM_REGION_GENERIC_HEADER;
+
+	/** Base address of PCI memory mapped config (x86-specific). */
+	uint64_t pci_mmconfig_base;
+	/** I/O port address of the PM timer (x86-specific). */
+	uint16_t pm_timer_address;
+	/** Number of CPUs available to the cell (x86-specific). */
+	uint16_t num_cpus;
+	/** Calibrated TSC frequency in kHz (x86-specific). */
+	uint32_t tsc_khz;
+	/** Calibrated APIC timer frequency in kHz or 0 if TSC deadline timer
+	 * is available (x86-specific). */
+	uint32_t apic_khz;
+};
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
+
+#define comm_region     ((struct jailhouse_comm_region *)COMM_REGION_BASE)
 
 /****************************************************************************
  * Public Function Prototypes
