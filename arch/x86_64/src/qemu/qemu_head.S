@@ -269,6 +269,6 @@ pd:
 
 	.type	g_idle_topstack, @object
 g_idle_topstack:
-	.long	_ebss
+	.quad	_ebss
 	.size	g_idle_topstack, . - g_idle_topstack
 	.end
