@@ -100,12 +100,6 @@ up_fullcontextrestore:
 
 	cli
 
-	/* Get the value of the stack pointer as it was when 
-     * the registers were pushed by CPU while interrupt triggered.
-	 */
-
-	movq    (8*REG_RSP)(%rdi), %rsp
-
 	/* Create an interrupt stack frame for the final iret.
 	 *
 	 *
