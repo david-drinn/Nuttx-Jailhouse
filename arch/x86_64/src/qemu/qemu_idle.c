@@ -80,10 +80,19 @@ void up_idle(void)
 
   sched_process_timer();
 #else
-  asm ("mov    $0x2f8,%edx");
-asm("mov    $99,%al");
-asm("out    %al,(%dx)");
-  /* Sleep until an interrupt occurs to save power */
+
+  asm volatile("hlt");
+  switch (comm_region->msg_to_cell) {
+  case JAILHOUSE_MSG_SHUTDOWN_REQUEST:
+    comm_region->cell_state = JAILHOUSE_CELL_SHUT_DOWN;
+    for(;;){
+      asm("cli");
+      asm("hlt");
+    }
+    break;
+  default:
+    break;
+  }
 
 #endif
 }
