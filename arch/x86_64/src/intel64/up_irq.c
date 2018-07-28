@@ -52,7 +52,7 @@
 
 #include "up_arch.h"
 #include "up_internal.h"
-#include "qemu.h"
+#include "jailhouse.h"
 
 /****************************************************************************
  * Private Function Prototypes

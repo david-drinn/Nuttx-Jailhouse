@@ -18,7 +18,7 @@ config ARCH_INTEL64
 
 endchoice
 
-config ARCH_CHIP_QEMU
+config ARCH_CHIP_JAILHOUSE
 	bool "Qemu x86_64 emulation"
 	default n
 	---help---
@@ -26,7 +26,7 @@ config ARCH_CHIP_QEMU
 
 config ARCH_CHIP
 	string
-	default "qemu" if ARCH_CHIP_QEMU
+	default "jailhouse" if ARCH_CHIP_JAILHOUSE
 
 config ARCH_X86_HAVE_64BIT
 	bool
@@ -36,7 +36,7 @@ source arch/x86_64/src/common/Kconfig
 if ARCH_INTEL64
 source arch/x86_64/src/intel64/Kconfig
 endif # ARCH_INTEL64
-if ARCH_CHIP_QEMU
-source arch/x86/src/qemu/Kconfig
-endif # ARCH_CHIP_QEMU
+if ARCH_CHIP_JAILHOUSE
+source arch/x86_64/src/jailhouse/Kconfig
+endif # ARCH_CHIP_JAILHOUSE
 endif # ARCH_X86_64

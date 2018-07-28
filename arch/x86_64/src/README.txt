@@ -27,5 +27,5 @@ For SoC chips, in particular, on-chip devices and differing interrupt
 structures may require special, chip-specific definitions in these chip-
 specific directories.
 
-qemu
-  This is the implementation of NuttX on the QEMU x86 simulation.
+jailhouse
+  This is the implementation of NuttX on the JAILHOUSE x86 simulation.

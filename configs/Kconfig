@@ -951,11 +951,11 @@ config ARCH_BOARD_QEMU_I486
 		Port of NuttX to QEMU in i486 mode.  This port will also run on real i486
 		hardwared (Google the Bifferboard).
 
-config ARCH_BOARD_QEMU_INTEL64
+config ARCH_BOARD_JAILHOUSE_INTEL64
 	bool "Qemu intel64 Mode"
 	depends on ARCH_X86_64 || ARCH_INTEL64
 	---help---
-		Port of NuttX to QEMU in intel64 mode. This port will also run on real intel64
+		Port of NuttX to JAILHOUSE in intel64 mode. This port will also run on real intel64
 		hardwared.
 
 config ARCH_BOARD_SABRE_6QUAD
@@ -1723,7 +1723,7 @@ config ARCH_BOARD
 	default "pic32mz-starterkit"       if ARCH_BOARD_PIC32MZ_STARTERKIT
 	default "pizero"                   if ARCH_BOARD_RASPBERRY_PIZERO || ARCH_BOARD_RASPBERRY_PIZEROW
 	default "qemu-i486"                if ARCH_BOARD_QEMU_I486
-	default "qemu-intel64"             if ARCH_BOARD_QEMU_INTEL64
+	default "jailhouse-intel64"             if ARCH_BOARD_JAILHOUSE_INTEL64
 	default "sabre-6quad"              if ARCH_BOARD_SABRE_6QUAD
 	default "sama5d2-xult"             if ARCH_BOARD_SAMA5D2_XULT
 	default "sama5d3x-ek"              if ARCH_BOARD_SAMA5D3X_EK
@@ -2087,8 +2087,8 @@ endif
 if ARCH_BOARD_QEMU_I486
 source "configs/qemu-i486/Kconfig"
 endif
-if ARCH_BOARD_QEMU_INTEL64
-source "configs/qemu-intel64/Kconfig"
+if ARCH_BOARD_JAILHOUSE_INTEL64
+source "configs/jailhouse-intel64/Kconfig"
 endif
 if ARCH_BOARD_SABRE_6QUAD
 source "configs/sabre-6quad/Kconfig"
