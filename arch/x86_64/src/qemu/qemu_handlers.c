@@ -171,10 +171,6 @@ uint64_t *isr_handler(uint64_t *regs, uint64_t irq)
   return regs;               /* To keep the compiler happy */
 #else
   uint64_t *ret;
-  /*if(irq == 0xd){*/
-      /*asm("mov %0, %%rcx; mov $500, %%eax;vmcall;"::"g" (regs[REG_ERRCODE]):"eax", "rcx");*/
-      /*asm("mov $1300, %%eax;vmcall;":::"eax");*/
-  /*}*/
 
   /* Dispatch the interrupt */
 
