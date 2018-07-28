@@ -195,6 +195,17 @@ start64:
     mov %ax, %fs
     mov %ax, %gs
 
+    //clear out bss section
+
+    mov $_sbss, %rax
+    mov $_ebss, %rdx
+clear_bss:
+    movq $0, (%rax)
+    add $8, %rax
+    cmp %rax, %rdx
+    jne clear_bss
+
+
     // Properly setup RSP to idle stack
     mov $(idle_stack + CONFIG_IDLETHREAD_STACKSIZE), %rsp
 
