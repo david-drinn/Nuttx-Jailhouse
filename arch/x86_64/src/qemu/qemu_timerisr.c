@@ -154,9 +154,8 @@ static int qemu_timerisr(int irq, uint32_t *regs, void *arg)
 {
   /* Process timer interrupt */
 
-  asm("mov $10000, %%eax;vmcall;":::"%eax");
   sched_process_timer();
-  apic_timer_set(100 * NS_PER_MSEC);
+  apic_timer_set(CONFIG_USEC_PER_TICK * NS_PER_USEC);
   return 0;
 }
 
