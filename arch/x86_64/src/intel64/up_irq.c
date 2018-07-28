@@ -149,7 +149,7 @@ struct idt_ptr_s idt_ptr;
 
 static inline void up_idtinit(void)
 {
-  idt_ptr.limit = sizeof(struct idt_entry_s) * 256 - 1;
+  idt_ptr.limit = sizeof(struct idt_entry_s) * NR_IRQS - 1;
   idt_ptr.base  = (uint64_t)&idt_entries;
 
   memset(&idt_entries, 0, sizeof(struct idt_entry_s)*256);
