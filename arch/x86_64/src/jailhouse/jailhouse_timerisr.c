@@ -154,6 +154,17 @@ static int jailhouse_timerisr(int irq, uint32_t *regs, void *arg)
 {
   /* Process timer interrupt */
 
+  switch (comm_region->msg_to_cell) {
+  case JAILHOUSE_MSG_SHUTDOWN_REQUEST:
+    comm_region->cell_state = JAILHOUSE_CELL_SHUT_DOWN;
+    for(;;){
+      asm("cli");
+      asm("hlt");
+    }
+    break;
+  default:
+    break;
+  }
   sched_process_timer();
   apic_timer_set(CONFIG_USEC_PER_TICK * NS_PER_USEC);
   return 0;
