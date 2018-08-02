@@ -64,7 +64,7 @@ else
 endif
 
 ARCHCPUFLAGS = -fno-builtin -fno-stack-protector
-ARCHPICFLAGS = -fpic
+ARCHPICFLAGS = -fpic -mno-red-zone
 ARCHWARNINGS = -Wall -Wstrict-prototypes -Wshadow -Wundef
 ARCHDEFINES =
 
