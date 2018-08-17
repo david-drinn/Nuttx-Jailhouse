@@ -50,9 +50,17 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define PAGE_SIZE		(4 * 1024ULL)
+#define BITS_PER_LONG		64
+#define HUGE_PAGE_SIZE		(2 * 1024 * 1024ULL)
+#define PAGE_MASK		(~(PAGE_SIZE - 1))
+#define HUGE_PAGE_MASK		(~(HUGE_PAGE_SIZE - 1))
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/
+
+enum map_type { MAP_CACHED, MAP_UNCACHED };
 
 #ifndef __ASSEMBLY__
 
@@ -121,6 +129,53 @@ static inline uint32_t inl(uint16_t port)
     : "dN" (port)
     );
   return regval;
+}
+
+/* MMIO */
+
+static inline uint8_t mmio_read8(void *address)
+{
+	return *(volatile uint8_t *)address;
+}
+
+static inline uint16_t mmio_read16(void *address)
+{
+	return *(volatile uint16_t *)address;
+}
+
+static inline uint32_t mmio_read32(void *address)
+{
+	uint32_t value;
+
+	/* assembly-encoded to match the hypervisor MMIO parser support */
+	asm volatile("movl (%1),%0" : "=r" (value) : "r" (address));
+	return value;
+}
+
+static inline uint64_t mmio_read64(void *address)
+{
+	return *(volatile uint64_t *)address;
+}
+
+static inline void mmio_write8(void *address, uint8_t value)
+{
+	*(volatile uint8_t *)address = value;
+}
+
+static inline void mmio_write16(void *address, uint16_t value)
+{
+	*(volatile uint16_t *)address = value;
+}
+
+static inline void mmio_write32(void *address, uint32_t value)
+{
+	/* assembly-encoded to match the hypervisor MMIO parser support */
+	asm volatile("movl %0,(%1)" : : "r" (value), "r" (address));
+}
+
+static inline void mmio_write64(void *address, uint64_t value)
+{
+	*(volatile uint64_t *)address = value;
 }
 
 /****************************************************************************

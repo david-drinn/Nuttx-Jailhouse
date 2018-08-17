@@ -171,7 +171,8 @@ uint64_t *isr_handler(uint64_t *regs, uint64_t irq)
   return regs;               /* To keep the compiler happy */
 #else
   uint64_t *ret;
-  /*asm("mov %0, %%rcx; mov %1, %%rbx; mov $500, %%eax;vmcall;"::"g" (regs[REG_ERRCODE]), "g" (regs[REG_RIP]):"eax", "rcx", "rbx");*/
+  asm("mov %0, %%rcx; mov %1, %%rbx; mov $500, %%eax;vmcall;"::"g" (irq), "g" (regs[REG_RBP]):"eax", "rcx", "rbx");
+  asm("mov %0, %%rcx; mov %1, %%rbx; mov $500, %%eax;vmcall;"::"g" (regs[REG_ERRCODE]), "g" (regs[REG_RIP]):"eax", "rcx", "rbx");
   /*asm("mov $1300, %%eax;vmcall;":::"eax");*/
   asm("mov $0, %%al":::);
   asm("mov $0xfa, %%dx":::);

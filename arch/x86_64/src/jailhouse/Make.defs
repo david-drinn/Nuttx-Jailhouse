@@ -48,12 +48,14 @@ CMN_CSRCS += up_regdump.c up_releasepending.c up_releasestack.c
 CMN_CSRCS += up_reprioritizertr.c up_savestate.c up_sigdeliver.c
 CMN_CSRCS += up_schedulesigaction.c up_stackframe.c up_unblocktask.c
 CMN_CSRCS += up_usestack.c
+CMN_CSRCS += up_pci.c
 
 # Required JAILHOUSE files
 
 CHIP_ASRCS  = jailhouse_saveusercontext.S jailhouse_fullcontextrestore.S jailhouse_vectors.S
 CHIP_CSRCS  = jailhouse_handlers.c jailhouse_idle.c jailhouse_lowputc.c jailhouse_lowsetup.c
 CHIP_CSRCS += jailhouse_serial.c
+CHIP_CSRCS += jailhouse_ivshmem.c
 
 # Configuration-dependent JAILHOUSE files
 

@@ -205,6 +205,20 @@ clear_bss:
     cmp %rax, %rdx
     jne clear_bss
 
+    // initialize rest of the page directory
+
+    lea pd, %rdi
+    mov $0x00000083, %rax
+    mov $64, %rcx
+
+pd_loop: 
+    mov %rax, 0(%rdi)
+    add $0x00200000, %rax
+    add $8, %rdi
+    dec %rcx
+    jnz pd_loop
+
+
 
     // Properly setup RSP to idle stack
     mov $(idle_stack + CONFIG_IDLETHREAD_STACKSIZE), %rsp
@@ -242,7 +256,7 @@ pdpt:
 
 	.align(4096)
 pd:
-	.quad	0x0000000000000083
+	.fill 64, 8, 0x83
 	.align(4096)
 
 /****************************************************************************

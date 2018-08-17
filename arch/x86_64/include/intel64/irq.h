@@ -54,6 +54,8 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define X2APIC_ID		0x802
+
 /* ISR and IRQ numbers */
 
 #define ISR0     0 /* Division by zero exception */
@@ -258,6 +260,11 @@ static inline void up_irq_restore(irqstate_t flags)
     {
       up_irq_enable();
     }
+}
+
+static inline unsigned int cpu_id(void)
+{
+	return read_msr(X2APIC_ID);
 }
 
 /****************************************************************************

@@ -408,6 +408,7 @@ static inline void os_start_application(void)
 
 int os_bringup(void)
 {
+  int pid;
   /* Setup up the initial environment for the idle task.  At present, this
    * may consist of only the initial PATH variable.  The PATH variable is
    * (probably) not used by the IDLE task.  However, the environment
@@ -439,6 +440,10 @@ int os_bringup(void)
 
   os_start_application();
 
+  //XXX: not so delightful to be here
+  up_ivshmem();
+
+  UNUSED(pid);
   /* We an save a few bytes by discarding the IDLE thread's environment. */
 
 #if !defined(CONFIG_DISABLE_ENVIRON) && defined(CONFIG_PATH_INITIAL)
