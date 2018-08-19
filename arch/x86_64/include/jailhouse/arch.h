@@ -49,7 +49,7 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-#define COMM_REGION_BASE 0x200000
+#define COMM_REGION_BASE 0x4000000
 
 #define JAILHOUSE_MSG_NONE			0
 
