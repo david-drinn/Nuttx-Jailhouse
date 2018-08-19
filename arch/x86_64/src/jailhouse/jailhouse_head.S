@@ -197,13 +197,13 @@ start64:
 
     //clear out bss section
 
-    mov $_sbss, %rax
+    mov $_sbss, %rbx
     mov $_ebss, %rdx
 clear_bss:
-    movq $0, (%rax)
-    add $8, %rax
-    cmp %rax, %rdx
-    jne clear_bss
+    movb $0, (%rbx)
+    inc %rbx
+    cmp %rbx, %rdx
+    jnae clear_bss
 
     // initialize rest of the page directory
 
