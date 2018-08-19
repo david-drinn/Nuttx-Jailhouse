@@ -26,14 +26,16 @@ static int     ivshmem_open(file_t *filep);
 static int     ivshmem_close(file_t *filep);
 static ssize_t ivshmem_read(file_t *filep, FAR char *buffer, size_t buflen);
 static ssize_t ivshmem_write(file_t *filep, FAR const char *buf, size_t buflen);
+static int     ivshmem_ioctl(file_t *filep, int cmd, unsigned long arg);
+static off_t   ivshmem_seek(file_t *filep, off_t offset, int whence);
 
 static const struct file_operations ivshmem_ops = {
     ivshmem_open,      /* open */
     ivshmem_close,     /* close */
     ivshmem_read,      /* read */
     ivshmem_write,     /* write */
-    0,              /* seek */
-    0,              /* ioctl */
+    ivshmem_seek,      /* seek */
+    ivshmem_ioctl,     /* ioctl */
 };
 
 static int ndevices;
@@ -53,6 +55,8 @@ static struct ivshmem_dev_data devs[MAX_NDEV];
 static sem_t ivshmem_input_sem;
 
 static int ivshmem_initialized = 0;
+
+static int seek_address = 0;
 
 /*******************************
  *  ivshmem support functions  *
@@ -120,8 +124,8 @@ static int get_ivpos(struct ivshmem_dev_data *d)
 
 static void send_irq(struct ivshmem_dev_data *d)
 {
-    printf("IVSHMEM: %02x:%02x.%x sending IRQ\n",
-           d->bdf >> 8, (d->bdf >> 3) & 0x1f, d->bdf & 0x3);
+    /*printf("IVSHMEM: %02x:%02x.%x sending IRQ\n",*/
+           /*d->bdf >> 8, (d->bdf >> 3) & 0x1f, d->bdf & 0x3);*/
     mmio_write32(d->registers + 3, 1);
 }
 
@@ -129,7 +133,7 @@ static int ivshmem_irq_handler(int irq, uint32_t *regs, void *arg)
 {
     int svalue;
 
-    printf("IVSHMEM: got interrupt ... %d\n", irq_counter++);
+    /*printf("IVSHMEM: got interrupt ... %d\n", irq_counter++);*/
     sem_getvalue(&ivshmem_input_sem, &svalue);
     if(svalue < 0){
         sem_post(&ivshmem_input_sem);
@@ -159,36 +163,82 @@ static int ivshmem_close(file_t *filep)
     return OK;
 }
 
-static ssize_t ivshmem_read(file_t *filep, FAR char *buf, size_t buflen)
+static int ivshmem_ioctl(file_t *filep, int cmd, unsigned long arg)
 {
-    int i;
-    struct ivshmem_dev_data *d;
-
-    sem_wait(&ivshmem_input_sem);
-
-    for (i = 0; i < ndevices; i++) {
-        d = devs + i;
-        memcpy(buf, d->shmem, MIN(buflen, d->shmemsz));
+    switch(cmd){
+        case IVSHMEM_WAIT:
+            sem_wait(&ivshmem_input_sem);
+            break;
+        case IVSHMEM_WAKE:
+            send_irq(devs);
+            break;
     }
 
-    return MIN(buflen, d->shmemsz);
+    return 0;
+}
+
+static off_t ivshmem_seek(file_t *filep, off_t offset, int whence)
+{
+    int reg;
+
+    switch (whence)
+    {
+        case SEEK_CUR:  /* Incremental seek */
+            reg = seek_address + offset;
+            if (0 > reg || reg > devs->shmemsz)
+            {
+                set_errno(-EINVAL);
+                return -1;
+            }
+
+            seek_address = reg;
+            break;
+
+        case SEEK_END:  /* Seek to the 1st X-data register */
+            seek_address = devs->shmemsz;
+            break;
+
+        case SEEK_SET:  /* Seek to designated address */
+            if (0 > offset || offset > devs->shmemsz)
+            {
+                set_errno(-EINVAL);
+                return -1;
+            }
+
+            seek_address = offset;
+            break;
+
+        default:        /* invalid whence */
+            set_errno(-EINVAL);
+            return -1;
+    }
+
+    return seek_address;
+}
+
+static ssize_t ivshmem_read(file_t *filep, FAR char *buf, size_t buflen)
+{
+    int size = MIN(buflen, devs->shmemsz - seek_address);
+
+    memcpy(buf, devs->shmem + seek_address, size);
+
+    seek_address += size;
+
+    return size;
 }
 
 static ssize_t ivshmem_write(file_t *filep, FAR const char *buf, size_t buflen)
 {
-    int i;
-    struct ivshmem_dev_data *d;
+    int size = MIN(buflen, devs->shmemsz - seek_address);
 
     if(buf == NULL || buflen < 1)
         return -EINVAL;
 
-    for (i = 0; i < ndevices; i++) {
-        d = devs + i;
-        memcpy(d->shmem, buf, MIN(buflen, d->shmemsz));
-        send_irq(d);
-    }
+    memcpy(devs->shmem + seek_address, buf, size);
 
-    return MIN(buflen, d->shmemsz);
+    seek_address += size;
+
+    return size;
 }
 
 
