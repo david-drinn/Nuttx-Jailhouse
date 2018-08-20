@@ -195,18 +195,7 @@ start64:
     mov %ax, %fs
     mov %ax, %gs
 
-    //clear out bss section
-
-    mov $_sbss, %rbx
-    mov $_ebss, %rdx
-clear_bss:
-    movb $0, (%rbx)
-    inc %rbx
-    cmp %rbx, %rdx
-    jnae clear_bss
-
     // initialize rest of the page directory
-
     lea pd, %rdi
     mov $0x00000083, %rax
     mov $64, %rcx
@@ -218,7 +207,14 @@ pd_loop:
     dec %rcx
     jnz pd_loop
 
-
+    //clear out bss section
+    mov $_sbss, %rbx
+    mov $_ebss, %rdx
+clear_bss:
+    movb $0, (%rbx)
+    inc %rbx
+    cmp %rbx, %rdx
+    jne clear_bss
 
     // Properly setup RSP to idle stack
     mov $(idle_stack + CONFIG_IDLETHREAD_STACKSIZE), %rsp
